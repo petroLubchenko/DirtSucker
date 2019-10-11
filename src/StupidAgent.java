@@ -11,7 +11,7 @@ public class StupidAgent extends Agent {
     private  int[] Xrange;
     private  int[] Yrange;
     private int[] position = new int[2];
-    private boolean[][] WasPositioned = new boolean[11][11];
+    private boolean[][] WasPositioned;
     private int[] direction;
 
     private Action action;
@@ -23,8 +23,9 @@ public class StupidAgent extends Agent {
         random = new Random();
         lastTurns = new int[2];
         turnsWithoutSucks = 0;
-        position[0] = 6;
-        position[1] = 6;
+        position[0] = 25;
+        position[1] = 25;
+        WasPositioned = new boolean[50][50];
 
         Xrange = new int[]{5,5};
         Yrange = new int[]{5,5};
@@ -39,42 +40,9 @@ public class StupidAgent extends Agent {
             return;
         }
 
-        if (p instanceof VacPercept){
-            turnsWithoutSucks += 1;
-            VacPercept vp = (VacPercept) p;
-            if (turnsWithoutSucks > MaxMovesWithoutSuck){
-                action = new ShutOff();
-                return;
-            }
-            if (vp.seeDirt()){
-                action = new SuckDirt();
-                turnsWithoutSucks = 0;
-                return;
-            }
-            if (vp.seeDirtInFront()){
-                isDirt = true;
-                action = new GoForward();
-                return;
-            }
-            if (vp.feelBump()) {
-                action = selectSideToTurn();
-                return;
-            }
-            if (vp.seeObstacle()){
-                action = selectSideToTurn();
-                return;
-            }
-            if (vp.seeDirt()){
-                isDirt = true;
-                // action = new GoForward();
-                return;
-            }
-            action = new GoForward();
-
-            position[0] += direction[0];
-            position[1] += direction[1];
-
-            // WasPositioned[position[0]][position[1]] = true;
+        if (p instanceof VacPercept) {
+            handleVacPercept((VacPercept) p);
+            return;
         }
     }
 
@@ -147,7 +115,14 @@ public class StupidAgent extends Agent {
             lastTurns[lastTurns.length - 1] = 1;
         }
 
-
+        if (direction[0] == 0){
+            direction[0] = -direction[1];
+            direction[1] = 0;
+        }
+        else{
+            direction[1] = direction[0];
+            direction[0] = 0;
+        }
 
         return new TurnLeft();
     }
@@ -160,7 +135,57 @@ public class StupidAgent extends Agent {
                 lastTurns[i - 1] = lastTurns[i];
             lastTurns[lastTurns.length - 1] = 2;
         }
+
+        if (direction[0] == 0){
+            direction[0] = direction[1];
+            direction[1] = 0;
+        }
+        else{
+            direction[1] = -direction[0];
+            direction[0] = 0;
+        }
+
         return new TurnRight();
     }
 
+    private Action goForward(){
+        position[0] += direction[0];
+        position[1] += direction[1];
+
+        WasPositioned[position[0]][position[1]] = true;
+
+        return new GoForward();
+    }
+
+    private void handleVacPercept(VacPercept vacPercept){
+        turnsWithoutSucks += 1;
+        if (turnsWithoutSucks > MaxMovesWithoutSuck){
+            action = new ShutOff();
+            return;
+        }
+        if (vacPercept.seeDirt()){
+            action = new SuckDirt();
+            turnsWithoutSucks = 0;
+            return;
+        }
+        if (vacPercept.seeDirtInFront()){
+            isDirt = true;
+            action = goForward();
+            return;
+        }
+        if (vacPercept.feelBump()) {
+            action = selectSideToTurn();
+            return;
+        }
+        if (vacPercept.seeObstacle()){
+            action = selectSideToTurn();
+            return;
+        }
+        if (vacPercept.seeDirt()){
+            isDirt = true;
+            // action = new GoForward();
+            return;
+        }
+        action = goForward();
+    }
 }

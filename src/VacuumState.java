@@ -53,8 +53,8 @@ public class VacuumState extends State {
 	/** Width of the map, including surrounding walls of the room. */
 	protected int width;
 
-	static final int DEFAULT_HEIGHT = 7;
-	static final int DEFAULT_WIDTH = 7;
+	static final int DEFAULT_HEIGHT = 10;
+	static final int DEFAULT_WIDTH = 10;
 
 
 	/** Return the default initial state for the vacuum world. */
